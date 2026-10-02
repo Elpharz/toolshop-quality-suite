@@ -32,6 +32,37 @@ test.describe('Products API', () => {
     for (const product of data) expect(product.category.id).toBe(category.id);
   });
 
+  test('by_brand filter only returns products from that brand', async ({ api }) => {
+    const brand = defined((await api.brands())[0], 'first brand');
+
+    const { data, total } = await api.products({ by_brand: brand.id });
+
+    expect(total).toBeGreaterThan(0);
+    for (const product of data) expect(product.brand.id).toBe(brand.id);
+  });
+
+  test('between=price,10,20 only returns products in that price range', async ({ api }) => {
+    const { data, total } = await api.products({ between: 'price,10,20' });
+
+    expect(total).toBeGreaterThan(0);
+    for (const product of data) {
+      expect(product.price).toBeGreaterThanOrEqual(10);
+      expect(product.price).toBeLessThanOrEqual(20);
+    }
+  });
+
+  test('related products share the category and exclude the product itself', async ({ api }) => {
+    const product = await api.findProductByName('Combination Pliers');
+
+    const related = await api.relatedProducts(product.id);
+
+    expect(related.length).toBeGreaterThan(0);
+    for (const item of related) {
+      expect(item.id).not.toBe(product.id);
+      expect(item.category.id).toBe(product.category.id);
+    }
+  });
+
   test('product detail matches the list entry', async ({ api }) => {
     const { data } = await api.products();
     const listed = defined(data[0], 'first product');
