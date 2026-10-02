@@ -9,6 +9,7 @@ All notable changes to this project are documented here. The format follows
 ### Planned for 0.2.0
 
 - Toolshop started from Docker Compose inside CI, SQL data-integrity checks, Python/pytest API suite.
+- Optional later: Postman/Newman export of the API requests.
 
 ## [0.1.0] - 2026-10-08
 
@@ -20,10 +21,10 @@ All notable changes to this project are documented here. The format follows
   token-injected signed-in browser page.
 - Typed `ToolshopApiClient` on Playwright's `APIRequestContext` with `raw*` methods for
   negative tests.
-- 15 API tests (auth, products, brands, categories, cart) and 9 UI tests (catalogue, cart,
-  sign-in); 10 tagged `@smoke`.
-- GitHub Actions workflow `ci.yml`: typecheck/lint/format job and Playwright job uploading the
-  HTML report and JUnit/traces as artifacts.
+- API-first suite: 20 API tests (auth, products, brands, categories, related products, cart,
+  registration validation) and 9 UI tests (catalogue, cart, sign-in); 10 tagged `@smoke`.
+- GitHub Actions workflow `ci.yml`: parallel lint, API and UI jobs; the API job needs no
+  browser so it reports first; HTML reports and JUnit/traces uploaded as artifacts.
 - ESLint (typescript-eslint strict type-checked + eslint-plugin-playwright) and Prettier.
 - README with CI badge, run instructions, structure and roadmap; MIT licence.
 

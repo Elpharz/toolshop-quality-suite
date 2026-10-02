@@ -5,25 +5,29 @@
 ![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178C6?logo=typescript&logoColor=white)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-A public, portfolio-grade **Playwright + TypeScript** test framework for
+An **API-first**, portfolio-grade **Playwright + TypeScript** test framework for
 [Toolshop](https://github.com/testsmith-io/practice-software-testing), the open-source
-_Practice Software Testing_ web shop by testsmith-io. It tests both the UI
-(<https://practicesoftwaretesting.com>) and the REST API
-(<https://api.practicesoftwaretesting.com>, [Swagger](https://api.practicesoftwaretesting.com/api/documentation)).
+_Practice Software Testing_ web shop by testsmith-io. The core is a typed REST API suite
+(<https://api.practicesoftwaretesting.com>, [Swagger](https://api.practicesoftwaretesting.com/api/documentation)),
+backed by a smaller set of end-to-end UI journeys (<https://practicesoftwaretesting.com>).
 
 > This is a personal learning and portfolio project against a public practice app. It is not
 > employer work and contains no client code or data.
 
 ## What it shows
 
+- **API-first:** 20 of the 29 tests hit the REST API directly (auth, catalogue, cart,
+  registration validation). They need no browser and run in seconds, and CI runs them as their
+  own job so the API signal arrives first.
 - **Layered design:** page objects (no assertions inside), Playwright fixtures (`test.extend`),
   and a typed API client on `APIRequestContext`. Specs only describe behaviour.
 - **UI + API in one suite:** UI tests use the API for setup and cross-checks (e.g. the product
   page must show the same price the API returns; the browser can be signed in by injecting an
   API-issued token instead of clicking through the login form).
 - **Positive and negative API coverage:** auth (valid login, wrong password, missing and tampered
-  tokens), catalogue (pagination, sorting, filtering, search, 404s), and a full cart lifecycle with
-  validation errors.
+  tokens), catalogue (pagination, sorting, brand/category/price filters, related products, search,
+  404s), a full cart lifecycle, and validation errors (422 field errors, 409 duplicate email).
+  Registration tests are negative-only, so the suite never creates accounts on the shared demo.
 - **No hard-coded seed IDs:** products are looked up by name through the API, so tests survive a
   re-seed of the demo database.
 - **Stable waits:** no `waitForTimeout`; tests wait on app-rendered markers and web-first
@@ -33,15 +37,16 @@ _Practice Software Testing_ web shop by testsmith-io. It tests both the UI
 
 ## Coverage (v0.1.0)
 
-| Layer | Spec                         |  Tests | What is checked                                                                                      |
-| ----- | ---------------------------- | -----: | ---------------------------------------------------------------------------------------------------- |
-| API   | `tests/api/auth.spec.ts`     |      5 | login → JWT, wrong password 401, `/users/me` owner profile, missing/tampered token 401               |
-| API   | `tests/api/products.spec.ts` |      8 | pagination, `sort=price,asc`, `by_category`, detail = list entry, 404, search, brands, category tree |
-| API   | `tests/api/cart.spec.ts`     |      2 | create → add → update qty → remove; invalid product 422                                              |
-| UI    | `tests/ui/catalogue.spec.ts` |      4 | product grid, search, sort by price, product page matches API                                        |
-| UI    | `tests/ui/cart.spec.ts`      |      2 | add-to-cart toast + badge, cart line quantity and total                                              |
-| UI    | `tests/ui/auth.spec.ts`      |      3 | sign-in → My account, wrong password error, token-injected session                                   |
-|       | **Total**                    | **24** | 15 API + 9 UI (Chromium). `@smoke` subset: 10                                                        |
+| Layer | Spec                         |  Tests | What is checked                                                                                                                            |
+| ----- | ---------------------------- | -----: | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| API   | `tests/api/auth.spec.ts`     |      5 | login → JWT, wrong password 401, `/users/me` owner profile, missing/tampered token 401                                                     |
+| API   | `tests/api/products.spec.ts` |     11 | pagination, `sort=price,asc`, `by_category`, `by_brand`, `between=price`, related, detail = list entry, 404, search, brands, category tree |
+| API   | `tests/api/cart.spec.ts`     |      2 | create → add → update qty → remove; invalid product 422                                                                                    |
+| API   | `tests/api/register.spec.ts` |      2 | missing names + weak password → 422 field errors; duplicate email → 409                                                                    |
+| UI    | `tests/ui/catalogue.spec.ts` |      4 | product grid, search, sort by price, product page matches API                                                                              |
+| UI    | `tests/ui/cart.spec.ts`      |      2 | add-to-cart toast + badge, cart line quantity and total                                                                                    |
+| UI    | `tests/ui/auth.spec.ts`      |      3 | sign-in → My account, wrong password error, token-injected session                                                                         |
+|       | **Total**                    | **29** | **20 API** + 9 UI (Chromium). `@smoke` subset: 10                                                                                          |
 
 ## Quick start
 
@@ -96,22 +101,28 @@ toolshop-quality-suite/
 │  ├─ fixtures/index.ts        # test.extend: api, customerToken, page objects, customerPage
 │  └─ support/helpers.ts       # small typed helpers
 ├─ tests/
-│  ├─ api/                     # auth, products, cart
+│  ├─ api/                     # auth, products, cart, register
 │  └─ ui/                      # catalogue, cart, auth
-├─ .github/workflows/ci.yml    # lint job + test job, uploads HTML report artifact
+├─ .github/workflows/ci.yml    # lint, api and ui jobs; uploads HTML report artifacts
+├─ docs/quarantine.md          # flaky-test policy and stability log
 └─ CHANGELOG.md
 ```
 
 ## CI
 
-`.github/workflows/ci.yml` runs on every push to `main` and every pull request:
+`.github/workflows/ci.yml` runs on every push to `main` and every pull request, as three
+parallel jobs:
 
 1. **lint** – `npm ci`, then `npm run check` (strict `tsc`, ESLint, Prettier).
-2. **test** – `npm ci`, `npx playwright install --with-deps chromium`, `npx playwright test`
-   with `retries: 2` and `trace: on-first-retry`, then uploads `playwright-report/` (HTML) and
-   `test-results/` (JUnit XML, traces, videos) as artifacts.
+2. **api** – `npm ci`, `npx playwright test --project=api`. No browser install, so this is the
+   fastest signal. Uploads `playwright-report-api` (HTML) and `test-results-api` (JUnit XML).
+3. **ui** – `npm ci`, `npx playwright install --with-deps chromium`,
+   `npx playwright test --project=ui-chromium`. Uploads `playwright-report-ui` and
+   `test-results-ui` (JUnit XML, traces, videos).
 
-Open a run under **Actions → CI → Artifacts → playwright-report**, unzip, and open `index.html`.
+CI uses `retries: 2` and `trace: on-first-retry`; the badge at the top reflects the whole
+workflow. Open a run under **Actions → CI → Artifacts**, unzip a `playwright-report-*` file, and
+open `index.html`.
 
 ### Flaky-test policy
 
@@ -126,9 +137,14 @@ Follows the LP-20 three-week build plan. Each release ends with something public
 
 | Release    | Target      | Scope                                                                                                                                                                                                                                                                                              |
 | ---------- | ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **v0.1.0** | 8 Oct 2026  | Framework (page objects, fixtures, typed API client), 9 UI + 15 API tests against the public demo, GitHub Actions with HTML report artifact, README badge. ✅                                                                                                                                      |
+| **v0.1.0** | 8 Oct 2026  | API-first framework (typed API client, fixtures, page objects): 20 API + 9 UI tests against the public demo; GitHub Actions with separate lint/API/UI jobs and HTML report artifacts; README badge. ✅                                                                                             |
 | v0.2.0     | 15 Oct 2026 | Toolshop started from **Docker Compose inside CI** (own disposable environment, seeded DB); **SQL data-integrity checks** against MariaDB (orders → invoices, totals, orphans, duplicates); **Python/pytest** API suite with parametrised and JSON-schema tests; second badge.                     |
 | v1.0.0     | 22 Oct 2026 | **Allure report on GitHub Pages**; quality gates (sharding, `@smoke` on PRs, nightly `@regression`, flake reporting in the job summary); **Jenkinsfile**; test strategy with numeric exit criteria; model bug reports from the buggy build; light security tests; metrics table from real CI runs. |
+
+Optional, later (not blocking any release):
+
+- **Postman/Newman export** of the API suite's requests (a Postman collection plus environment
+  file, run with `newman` in CI), for teams that standardise on Postman.
 
 Stretch (not blocking v1.0.0): k6 smoke test with p95/error-rate thresholds; a few GraphQL tests
 against a public GraphQL API (Toolshop is REST-only).
