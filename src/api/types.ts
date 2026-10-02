@@ -68,6 +68,25 @@ export interface ValidationError {
   errors: Record<string, string[]>;
 }
 
+/** /users/register returns field errors at the top level: `{ field: [messages] }`. */
+export type FieldErrors = Record<string, string[]>;
+
+export interface RegisterRequest {
+  first_name: string;
+  last_name: string;
+  email: string;
+  password: string;
+  dob?: string;
+  phone?: string;
+  address?: {
+    street?: string;
+    city?: string;
+    state?: string;
+    country?: string;
+    postal_code?: string;
+  };
+}
+
 export type ProductSort = 'name,asc' | 'name,desc' | 'price,asc' | 'price,desc';
 
 export interface ProductQuery {
@@ -75,4 +94,6 @@ export interface ProductQuery {
   sort?: ProductSort;
   by_category?: string;
   by_brand?: string;
+  /** e.g. `price,10,20` */
+  between?: string;
 }

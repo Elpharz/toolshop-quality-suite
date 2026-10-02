@@ -7,6 +7,7 @@ import type {
   Paginated,
   Product,
   ProductQuery,
+  RegisterRequest,
   User,
 } from './types';
 
@@ -52,6 +53,10 @@ export class ToolshopApiClient {
     return this;
   }
 
+  rawRegister(user: Partial<RegisterRequest>): Promise<APIResponse> {
+    return this.request.post('users/register', { data: user });
+  }
+
   rawMe(): Promise<APIResponse> {
     return this.request.get('users/me', { headers: this.headers() });
   }
@@ -75,6 +80,13 @@ export class ToolshopApiClient {
 
   async product(id: string): Promise<Product> {
     return this.json<Product>(await this.rawProduct(id), 200);
+  }
+
+  async relatedProducts(id: string): Promise<Product[]> {
+    return this.json<Product[]>(
+      await this.request.get(`products/${encodeURIComponent(id)}/related`),
+      200,
+    );
   }
 
   async searchProducts(q: string): Promise<Paginated<Product>> {
