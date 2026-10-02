@@ -13,6 +13,13 @@ concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  # Public Toolshop demo. Override with repository variables/secrets to target another instance.
+  BASE_URL: ${{ vars.BASE_URL || 'https://practicesoftwaretesting.com' }}
+  API_URL: ${{ vars.API_URL || 'https://api.practicesoftwaretesting.com' }}
+  CUSTOMER_EMAIL: ${{ secrets.CUSTOMER_EMAIL || 'customer@practicesoftwaretesting.com' }}
+  CUSTOMER_PASSWORD: ${{ secrets.CUSTOMER_PASSWORD || 'welcome01' }}
+
 jobs:
   lint:
     name: Typecheck, lint, format
@@ -27,16 +34,39 @@ jobs:
       - run: npm ci
       - run: npm run check
 
-  test:
-    name: Playwright (API + UI, Chromium)
+  # API-first: the API suite needs no browser, so it gives the fastest signal.
+  api:
+    name: API tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: lts/*
+          cache: npm
+      - run: npm ci
+      - name: Run API tests
+        run: npx playwright test --project=api
+      - name: Upload API HTML report
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: playwright-report-api
+          path: playwright-report/
+          retention-days: 14
+      - name: Upload API JUnit
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: test-results-api
+          path: test-results/
+          retention-days: 14
+
+  ui:
+    name: UI tests (Chromium)
     runs-on: ubuntu-latest
     timeout-minutes: 20
-    env:
-      # Public Toolshop demo. Override with repository variables/secrets to target another instance.
-      BASE_URL: ${{ vars.BASE_URL || 'https://practicesoftwaretesting.com' }}
-      API_URL: ${{ vars.API_URL || 'https://api.practicesoftwaretesting.com' }}
-      CUSTOMER_EMAIL: ${{ secrets.CUSTOMER_EMAIL || 'customer@practicesoftwaretesting.com' }}
-      CUSTOMER_PASSWORD: ${{ secrets.CUSTOMER_PASSWORD || 'welcome01' }}
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
@@ -46,19 +76,19 @@ jobs:
       - run: npm ci
       - name: Install Playwright Chromium
         run: npx playwright install --with-deps chromium
-      - name: Run tests
-        run: npx playwright test
-      - name: Upload HTML report
+      - name: Run UI tests
+        run: npx playwright test --project=ui-chromium
+      - name: Upload UI HTML report
         if: ${{ !cancelled() }}
         uses: actions/upload-artifact@v7
         with:
-          name: playwright-report
+          name: playwright-report-ui
           path: playwright-report/
           retention-days: 14
-      - name: Upload JUnit + traces
+      - name: Upload UI JUnit, traces and videos
         if: ${{ !cancelled() }}
         uses: actions/upload-artifact@v7
         with:
-          name: test-results
+          name: test-results-ui
           path: test-results/
           retention-days: 14
