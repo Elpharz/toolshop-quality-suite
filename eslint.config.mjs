@@ -5,7 +5,8 @@ import playwright from 'eslint-plugin-playwright';
 import prettier from 'eslint-config-prettier';
 
 export default tseslint.config(
-  { ignores: ['node_modules/', 'playwright-report/', 'test-results/', 'blob-report/'] },
+  // evals/ is a separate Node package (plain ESM JS + Promptfoo) with its own checks.
+  { ignores: ['node_modules/', 'playwright-report/', 'test-results/', 'blob-report/', 'evals/'] },
   eslint.configs.recommended,
   ...tseslint.configs.strictTypeChecked,
   {

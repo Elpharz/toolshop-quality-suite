@@ -3,3 +3,5 @@ playwright-report
 test-results
 blob-report
 package-lock.json
+evals/results
+evals/mock/*.json
