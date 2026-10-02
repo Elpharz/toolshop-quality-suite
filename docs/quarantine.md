@@ -20,6 +20,10 @@ public demo on 3 Oct 2026 (times EAT):
   and 4 workers, 29/29 passed each time (14.4 s, 13.9 s, 14.1 s). Then CI mode (`CI=1`,
   2 workers, `retries: 2`) per CI job: API 20/20 passed (11.1 s), UI 9/9 passed (14.3 s),
   0 flaky.
+- After adding GitHub Pages publishing, 00:50–00:52: CI-mode API job 20/20 (11.2 s) and UI job
+  9/9 (14.0 s) wrote `report-api.zip` and `report-ui.zip` blob reports; `merge-reports` combined
+  them into one HTML report (29 expected, 0 unexpected, 0 flaky). Then one full local run with
+  `retries: 0`: 29/29 passed (14.3 s).
 - Earlier 24-test build, 00:42–00:44: 3 local runs 24/24 each, plus a CI-mode run and a
   fresh-clone `npm ci` CI-mode run, both 24/24, 0 flaky.
 - Test bugs fixed during development (not demo flakiness): the sort-by-price UI test waited

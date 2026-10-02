@@ -18,6 +18,8 @@ export default defineConfig({
         ['list'],
         ['html', { open: 'never' }],
         ['junit', { outputFile: 'test-results/junit.xml' }],
+        // Blob reports from the API and UI jobs are merged into one HTML report for GitHub Pages.
+        ['blob', { fileName: `report-${process.env.REPORT_NAME ?? 'local'}.zip` }],
         ['github'],
       ]
     : [['list'], ['html', { open: 'never' }]],

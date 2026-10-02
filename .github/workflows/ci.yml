@@ -48,6 +48,8 @@ jobs:
       - run: npm ci
       - name: Run API tests
         run: npx playwright test --project=api
+        env:
+          REPORT_NAME: api
       - name: Upload API HTML report
         if: ${{ !cancelled() }}
         uses: actions/upload-artifact@v7
@@ -62,6 +64,13 @@ jobs:
           name: test-results-api
           path: test-results/
           retention-days: 14
+      - name: Upload API blob report (for the merged report)
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: blob-report-api
+          path: blob-report/
+          retention-days: 1
 
   ui:
     name: UI tests (Chromium)
@@ -78,6 +87,8 @@ jobs:
         run: npx playwright install --with-deps chromium
       - name: Run UI tests
         run: npx playwright test --project=ui-chromium
+        env:
+          REPORT_NAME: ui
       - name: Upload UI HTML report
         if: ${{ !cancelled() }}
         uses: actions/upload-artifact@v7
@@ -92,3 +103,67 @@ jobs:
           name: test-results-ui
           path: test-results/
           retention-days: 14
+      - name: Upload UI blob report (for the merged report)
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: blob-report-ui
+          path: blob-report/
+          retention-days: 1
+
+  # Merge the API and UI blob reports into one HTML report. Runs even when tests fail,
+  # so the published report shows failures honestly.
+  report:
+    name: Merge HTML report
+    needs: [api, ui]
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: lts/*
+          cache: npm
+      - run: npm ci
+      - name: Download blob reports
+        uses: actions/download-artifact@v8
+        with:
+          pattern: blob-report-*
+          path: all-blob-reports
+          merge-multiple: true
+      - name: Merge into one HTML report
+        run: npx playwright merge-reports --reporter html ./all-blob-reports
+      - name: Upload merged HTML report
+        uses: actions/upload-artifact@v7
+        with:
+          name: playwright-report-merged
+          path: playwright-report/
+          retention-days: 14
+      - name: Upload Pages artifact
+        if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+        uses: actions/upload-pages-artifact@v5
+        with:
+          path: playwright-report/
+
+  # Publishes the merged report to https://elpharz.github.io/toolshop-quality-suite/
+  # Requires Settings -> Pages -> Source: GitHub Actions (one-time).
+  deploy-report:
+    name: Deploy report to GitHub Pages
+    needs: report
+    if: ${{ !cancelled() && needs.report.result == 'success' && github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    concurrency:
+      group: pages
+      cancel-in-progress: false
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v5

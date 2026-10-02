@@ -25,6 +25,8 @@ All notable changes to this project are documented here. The format follows
   registration validation) and 9 UI tests (catalogue, cart, sign-in); 10 tagged `@smoke`.
 - GitHub Actions workflow `ci.yml`: parallel lint, API and UI jobs; the API job needs no
   browser so it reports first; HTML reports and JUnit/traces uploaded as artifacts.
+- Merged API + UI Playwright HTML report (blob reports + `merge-reports`) deployed to GitHub Pages
+  on pushes to `main`: https://elpharz.github.io/toolshop-quality-suite/.
 - ESLint (typescript-eslint strict type-checked + eslint-plugin-playwright) and Prettier.
 - README with CI badge, run instructions, structure and roadmap; MIT licence.
 

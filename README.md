@@ -5,6 +5,9 @@
 ![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178C6?logo=typescript&logoColor=white)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
+**[Latest test report](https://elpharz.github.io/toolshop-quality-suite/)**: the merged API + UI
+Playwright HTML report from the most recent run on `main`, published to GitHub Pages.
+
 An **API-first**, portfolio-grade **Playwright + TypeScript** test framework for
 [Toolshop](https://github.com/testsmith-io/practice-software-testing), the open-source
 _Practice Software Testing_ web shop by testsmith-io. The core is a typed REST API suite
@@ -103,26 +106,30 @@ toolshop-quality-suite/
 ├─ tests/
 │  ├─ api/                     # auth, products, cart, register
 │  └─ ui/                      # catalogue, cart, auth
-├─ .github/workflows/ci.yml    # lint, api and ui jobs; uploads HTML report artifacts
+├─ .github/workflows/ci.yml    # lint, api, ui, merged report, GitHub Pages deploy
 ├─ docs/quarantine.md          # flaky-test policy and stability log
 └─ CHANGELOG.md
 ```
 
 ## CI
 
-`.github/workflows/ci.yml` runs on every push to `main` and every pull request, as three
-parallel jobs:
+`.github/workflows/ci.yml` runs on every push to `main` and every pull request:
 
 1. **lint** – `npm ci`, then `npm run check` (strict `tsc`, ESLint, Prettier).
-2. **api** – `npm ci`, `npx playwright test --project=api`. No browser install, so this is the
-   fastest signal. Uploads `playwright-report-api` (HTML) and `test-results-api` (JUnit XML).
-3. **ui** – `npm ci`, `npx playwright install --with-deps chromium`,
-   `npx playwright test --project=ui-chromium`. Uploads `playwright-report-ui` and
-   `test-results-ui` (JUnit XML, traces, videos).
+2. **api** – `npx playwright test --project=api`. No browser install, so this is the fastest
+   signal. Uploads `playwright-report-api` (HTML), `test-results-api` (JUnit XML) and a blob report.
+3. **ui** – `npx playwright install --with-deps chromium`, then
+   `npx playwright test --project=ui-chromium`. Uploads `playwright-report-ui`, `test-results-ui`
+   (JUnit XML, traces, videos) and a blob report.
+4. **report** – after `api` and `ui` (even if tests failed), merges both blob reports with
+   `npx playwright merge-reports` into one HTML report and uploads it as `playwright-report-merged`.
+5. **deploy-report** – on pushes to `main` only, publishes the merged report to GitHub Pages with
+   `actions/deploy-pages` (job permissions `pages: write`, `id-token: write`; environment
+   `github-pages`): <https://elpharz.github.io/toolshop-quality-suite/>.
 
-CI uses `retries: 2` and `trace: on-first-retry`; the badge at the top reflects the whole
-workflow. Open a run under **Actions → CI → Artifacts**, unzip a `playwright-report-*` file, and
-open `index.html`.
+`lint`, `api` and `ui` run in parallel. CI uses `retries: 2` and `trace: on-first-retry`; the badge
+at the top reflects the whole workflow. Reports are also downloadable under
+**Actions → CI → Artifacts**.
 
 ### Flaky-test policy
 
@@ -135,11 +142,11 @@ silently deleted. There are no quarantined tests in v0.1.0.
 
 Follows the LP-20 three-week build plan. Each release ends with something public.
 
-| Release    | Target      | Scope                                                                                                                                                                                                                                                                                              |
-| ---------- | ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **v0.1.0** | 8 Oct 2026  | API-first framework (typed API client, fixtures, page objects): 20 API + 9 UI tests against the public demo; GitHub Actions with separate lint/API/UI jobs and HTML report artifacts; README badge. ✅                                                                                             |
-| v0.2.0     | 15 Oct 2026 | Toolshop started from **Docker Compose inside CI** (own disposable environment, seeded DB); **SQL data-integrity checks** against MariaDB (orders → invoices, totals, orphans, duplicates); **Python/pytest** API suite with parametrised and JSON-schema tests; second badge.                     |
-| v1.0.0     | 22 Oct 2026 | **Allure report on GitHub Pages**; quality gates (sharding, `@smoke` on PRs, nightly `@regression`, flake reporting in the job summary); **Jenkinsfile**; test strategy with numeric exit criteria; model bug reports from the buggy build; light security tests; metrics table from real CI runs. |
+| Release    | Target      | Scope                                                                                                                                                                                                                                                                                                                                                                  |
+| ---------- | ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **v0.1.0** | 8 Oct 2026  | API-first framework (typed API client, fixtures, page objects): 20 API + 9 UI tests against the public demo; GitHub Actions with separate lint/API/UI jobs, merged HTML report published to GitHub Pages; README badge. ✅                                                                                                                                             |
+| v0.2.0     | 15 Oct 2026 | Toolshop started from **Docker Compose inside CI** (own disposable environment, seeded DB); **SQL data-integrity checks** against MariaDB (orders → invoices, totals, orphans, duplicates); **Python/pytest** API suite with parametrised and JSON-schema tests; second badge.                                                                                         |
+| v1.0.0     | 22 Oct 2026 | **Allure report on GitHub Pages** (the Playwright HTML report is already published there from v0.1.0); quality gates (sharding, `@smoke` on PRs, nightly `@regression`, flake reporting in the job summary); **Jenkinsfile**; test strategy with numeric exit criteria; model bug reports from the buggy build; light security tests; metrics table from real CI runs. |
 
 Optional, later (not blocking any release):
 
