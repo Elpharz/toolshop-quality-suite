@@ -11,7 +11,7 @@ All notable changes to this project are documented here. The format follows
 - Toolshop started from Docker Compose inside CI, SQL data-integrity checks, Python/pytest API suite.
 - Optional later: Postman/Newman export of the API requests.
 
-## [0.1.0] - 2026-10-08
+## [0.1.0] - 2026-10-11
 
 ### Added
 
