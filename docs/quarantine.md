@@ -13,6 +13,22 @@ deleted or silently retried forever.
 
 ## Stability log
 
+### 11 Oct 2026: first GitHub-hosted runs (CI run 38133181839, commit b27636f)
+
+- UI job: 8/9 passed. `auth.spec.ts:5` (sign in via the form) failed on all 3 attempts with
+  `getByTestId('page-title')` not found. The error context, screenshots and trace in the published
+  report show the cause: after `POST /users/login` (200) the app loads `/account` as a full
+  document, and Cloudflare answered that request with `403` and `cf-mitigated: challenge`
+  ("Performing security verification" / "Verify you are human", Ray IDs a48fb2492bc255da,
+  a48fb2a0daef4ea0, a48fb2f7cf052f64, POP LAX). The app was never rendered, so no locator
+  could have passed. The test id still exists on the live site, and the test passes from the box.
+- Not quarantined: it is a demo-environment block, not test flakiness. Failing tests now get a
+  `cloudflare-challenge` annotation/attachment (from the `page` fixture) so this case shows up
+  by name in the report and CI log. The lasting fix is the planned 0.2.0 item: run Toolshop from
+  Docker Compose inside CI instead of the CDN-protected public demo.
+
+### 3 Oct 2026: local baseline
+
 All runs on the box (Linux, Node 20.19, Chromium headless shell 153, Playwright 1.63) against the
 public demo on 3 Oct 2026 (times EAT):
 
