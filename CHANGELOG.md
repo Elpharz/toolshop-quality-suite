@@ -6,6 +6,14 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Fixed
+
+- `AccountPage.title` uses the user-facing `getByRole('heading', { level: 1 })` instead of the
+  `page-title` test id, so a wrong page fails with the heading it actually rendered.
+- Failing UI tests that hit a Cloudflare bot challenge on the public demo are annotated
+  `cloudflare-challenge` (with the Ray ID) in the report and CI log. Root cause of the
+  11 Oct sign-in failure on GitHub-hosted runners; see `docs/quarantine.md`.
+
 ### Planned for 0.2.0
 
 - Toolshop started from Docker Compose inside CI, SQL data-integrity checks, Python/pytest API suite.

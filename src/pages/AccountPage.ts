@@ -7,7 +7,10 @@ export class AccountPage extends BasePage {
 
   constructor(page: Page) {
     super(page);
-    this.title = page.getByTestId('page-title');
+    // User-facing locator: the page's only level-1 heading. If anything other than the
+    // dashboard is rendered (e.g. a Cloudflare challenge page, which has its own <h1>),
+    // the toHaveText('My account') assertion fails with the heading that was actually shown.
+    this.title = page.getByRole('heading', { level: 1 });
   }
 
   async goto(): Promise<void> {

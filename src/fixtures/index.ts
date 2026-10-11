@@ -16,6 +16,30 @@ interface Fixtures {
 }
 
 export const test = base.extend<Fixtures>({
+  // When a UI test fails, check whether the public demo's CDN served a Cloudflare bot
+  // challenge instead of the app. If so, record it as an annotation and a text attachment so
+  // the report and CI log say "blocked by Cloudflare" rather than only "element not found".
+  // Pass/fail is unchanged: the test still fails.
+  page: async ({ page }, use, testInfo) => {
+    await use(page);
+    if (testInfo.status === testInfo.expectedStatus || page.isClosed()) return;
+    const challenged = await page
+      .getByRole('heading', { name: 'Performing security verification' })
+      .isVisible()
+      .catch(() => false);
+    if (!challenged) return;
+    const rayId = await page
+      .locator('code')
+      .first()
+      .textContent({ timeout: 1_000 })
+      .catch(() => null);
+    const description =
+      `Cloudflare served a bot challenge at ${page.url()} (Ray ID: ${rayId ?? 'unknown'}); ` +
+      'the app was not rendered. See docs/quarantine.md.';
+    testInfo.annotations.push({ type: 'cloudflare-challenge', description });
+    await testInfo.attach('cloudflare-challenge', { body: description, contentType: 'text/plain' });
+  },
+
   // A dedicated API context so UI specs can also call the API for setup and
   // cross-checks, independent of the page's baseURL.
   api: async ({}, use) => {
