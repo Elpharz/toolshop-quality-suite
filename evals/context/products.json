@@ -1,0 +1,96 @@
+{
+  "source": "https://api.practicesoftwaretesting.com/products/search",
+  "fetched_at": "2026-10-02T21:56:28.193Z",
+  "products": [
+    {
+      "name": "Combination Pliers",
+      "price_usd": 14.15,
+      "brand": "ForgeFlex Tools",
+      "category": "Pliers",
+      "in_stock": true,
+      "co2_rating": "D",
+      "eco_friendly": false
+    },
+    {
+      "name": "Long Nose Pliers",
+      "price_usd": 14.24,
+      "brand": "MightyCraft Hardware",
+      "category": "Pliers",
+      "in_stock": false,
+      "co2_rating": "D",
+      "eco_friendly": false
+    },
+    {
+      "name": "Slip Joint Pliers",
+      "price_usd": 9.17,
+      "brand": "MightyCraft Hardware",
+      "category": "Pliers",
+      "in_stock": true,
+      "co2_rating": "D",
+      "eco_friendly": false
+    },
+    {
+      "name": "Thor Hammer",
+      "price_usd": 11.14,
+      "brand": "ForgeFlex Tools",
+      "category": "Hammer",
+      "in_stock": true,
+      "co2_rating": "D",
+      "eco_friendly": false
+    },
+    {
+      "name": "Claw Hammer",
+      "price_usd": 11.48,
+      "brand": "MightyCraft Hardware",
+      "category": "Hammer",
+      "in_stock": true,
+      "co2_rating": "D",
+      "eco_friendly": false
+    },
+    {
+      "name": "Sledgehammer",
+      "price_usd": 17.75,
+      "brand": "ForgeFlex Tools",
+      "category": "Hammer",
+      "in_stock": true,
+      "co2_rating": "D",
+      "eco_friendly": false
+    },
+    {
+      "name": "Wood Saw",
+      "price_usd": 12.18,
+      "brand": "ForgeFlex Tools",
+      "category": "Hand Saw",
+      "in_stock": true,
+      "co2_rating": "B",
+      "eco_friendly": true
+    },
+    {
+      "name": "Phillips Screwdriver",
+      "price_usd": 4.92,
+      "brand": "ForgeFlex Tools",
+      "category": "Screwdriver",
+      "in_stock": true,
+      "co2_rating": "C",
+      "eco_friendly": false
+    },
+    {
+      "name": "Safety Goggles",
+      "price_usd": 24.26,
+      "brand": "ForgeFlex Tools",
+      "category": "Safety Gear",
+      "in_stock": true,
+      "co2_rating": "B",
+      "eco_friendly": true
+    },
+    {
+      "name": "Cordless Drill 12V",
+      "price_usd": 46.5,
+      "brand": "MightyCraft Hardware",
+      "category": "Drill",
+      "in_stock": true,
+      "co2_rating": "E",
+      "eco_friendly": false
+    }
+  ]
+}

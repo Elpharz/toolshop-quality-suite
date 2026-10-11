@@ -18,6 +18,8 @@ All notable changes to this project are documented here. The format follows
 
 - Toolshop started from Docker Compose inside CI, SQL data-integrity checks, Python/pytest API suite.
 - Optional later: Postman/Newman export of the API requests.
+- LLM eval seed (`evals/`, Promptfoo + Gemini): 23 cases, offline controls, CI workflow that skips
+  without `GEMINI_API_KEY`. No real-model results yet.
 
 ## [0.1.0] - 2026-10-11
 

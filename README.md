@@ -148,6 +148,11 @@ Follows the LP-20 three-week build plan. Each release ends with something public
 | v0.2.0     | 15 Oct 2026 | Toolshop started from **Docker Compose inside CI** (own disposable environment, seeded DB); **SQL data-integrity checks** against MariaDB (orders → invoices, totals, orphans, duplicates); **Python/pytest** API suite with parametrised and JSON-schema tests; second badge.                                                                                         |
 | v1.0.0     | 22 Oct 2026 | **Allure report on GitHub Pages** (the Playwright HTML report is already published there from v0.1.0); quality gates (sharding, `@smoke` on PRs, nightly `@regression`, flake reporting in the job summary); **Jenkinsfile**; test strategy with numeric exit criteria; model bug reports from the buggy build; light security tests; metrics table from real CI runs. |
 
+**In progress on branch `feat/llm-evals` (v0.2 seed):** a Promptfoo LLM eval suite (grounding,
+hallucination, refusal, prompt injection, output format) targeting Gemini, with offline
+positive/negative controls and Wilson confidence intervals. See [`evals/README.md`](evals/README.md).
+No real-model results yet.
+
 Optional, later (not blocking any release):
 
 - **Postman/Newman export** of the API suite's requests (a Postman collection plus environment

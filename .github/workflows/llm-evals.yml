@@ -1,0 +1,78 @@
+name: LLM evals
+
+# v0.2 seed. Kept separate from CI so the main badge only reflects the Playwright suite,
+# and so real-model calls (free-tier quota) only run when the evals change, weekly, or on demand.
+on:
+  push:
+    # feat/llm-evals is included so the seed can run with the secret before it is merged.
+    branches: [main, feat/llm-evals]
+    paths: ['evals/**', '.github/workflows/llm-evals.yml']
+  pull_request:
+    paths: ['evals/**', '.github/workflows/llm-evals.yml']
+  schedule:
+    - cron: '0 6 * * 1' # Mondays 06:00 UTC = 09:00 EAT
+  workflow_dispatch:
+    inputs:
+      repeat:
+        description: Times to run each case (more repeats = tighter confidence interval, more quota)
+        default: '1'
+        required: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: llm-evals-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  llm-evals:
+    name: Promptfoo evals (offline controls + Gemini)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: evals
+    env:
+      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+      EVAL_MIN_PASS_RATE: ${{ vars.EVAL_MIN_PASS_RATE }}
+      PROMPTFOO_DISABLE_TELEMETRY: '1'
+      PROMPTFOO_DISABLE_UPDATE: '1'
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: evals/package-lock.json
+      - run: npm ci
+
+      # Always runs, needs no key: validates the config and proves the assertions
+      # pass on ideal answers (100%) and catch a deliberate flaw in every case (0%).
+      - name: Offline controls (config, positive and negative control)
+        run: npm run eval:controls
+
+      - name: Check for GEMINI_API_KEY
+        id: key
+        run: |
+          if [ -n "${GEMINI_API_KEY}" ]; then
+            echo "present=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "present=false" >> "$GITHUB_OUTPUT"
+            echo "::notice title=Real-model eval skipped::GEMINI_API_KEY secret is not set. Offline controls ran; no model was called."
+            echo "### Real-model eval skipped: no \`GEMINI_API_KEY\` secret. Offline controls ran; no model was called." >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Real-model eval (Gemini)
+        if: ${{ steps.key.outputs.present == 'true' && github.event_name != 'pull_request' }}
+        env:
+          EVAL_REPEAT: ${{ github.event.inputs.repeat || '1' }}
+        run: npm run eval:gemini
+
+      - name: Upload eval results
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: llm-eval-results
+          path: evals/results/
+          retention-days: 30

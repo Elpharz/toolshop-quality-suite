@@ -1,0 +1,23 @@
+{
+  "name": "toolshop-llm-evals",
+  "version": "0.2.0-seed",
+  "private": true,
+  "description": "Promptfoo eval suite for a Toolshop shopping-assistant prompt (grounding, hallucination, refusal, prompt injection, output format).",
+  "license": "MIT",
+  "type": "module",
+  "engines": {
+    "node": ">=22.22"
+  },
+  "devDependencies": {
+    "promptfoo": "^0.123.1"
+  },
+  "scripts": {
+    "validate": "promptfoo validate -c promptfooconfig.yaml",
+    "eval:golden": "promptfoo eval -c promptfooconfig.yaml --providers file://providers/golden-mock.mjs --no-cache --no-write --no-progress-bar -o results/golden.json; node scripts/summary.mjs results/golden.json --label \"positive control (golden mock, offline)\" --expect 1",
+    "eval:faulty": "promptfoo eval -c promptfooconfig.yaml --providers file://providers/faulty-mock.mjs --no-cache --no-write --no-progress-bar -o results/faulty.json; node scripts/summary.mjs results/faulty.json --label \"negative control (faulty mock, offline)\" --expect 0",
+    "eval:controls": "npm run validate && npm run eval:golden && npm run eval:faulty",
+    "eval:gemini": "promptfoo eval -c promptfooconfig.yaml --no-cache --no-progress-bar -j 1 --delay ${EVAL_DELAY_MS:-6000} --repeat ${EVAL_REPEAT:-1} -o results/gemini.json; node scripts/summary.mjs results/gemini.json --label \"Gemini (real model)\"",
+    "context:refresh": "node scripts/fetch-context.mjs",
+    "view": "promptfoo view"
+  }
+}
